@@ -1,9 +1,11 @@
 package com.example.defaultphoneapp
 
 import android.annotation.SuppressLint
+import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.app.Person
 import android.content.Intent
 import android.media.AudioAttributes
 import android.media.RingtoneManager
@@ -13,6 +15,7 @@ import android.telecom.InCallService
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 
 
 /**
@@ -76,6 +79,7 @@ class MyInCallService : InCallService() {
                 Call.STATE_DISCONNECTED -> {
                     //挂断
                     Log.d("phone", "STATE_DISCONNECTED")
+                    stopService(Intent(this@MyInCallService, MyService::class.java))
                 }
             }
         }
@@ -83,20 +87,17 @@ class MyInCallService : InCallService() {
 
 
     @SuppressLint("WrongConstant")
-    @RequiresApi(Build.VERSION_CODES.O)
+    @RequiresApi(Build.VERSION_CODES.S)
     override fun onCallAdded(call: Call) {
         super.onCallAdded(call)
-        call.registerCallback(callback)
 
-        if (call.details.state == Call.STATE_RINGING) {
-            //incoming 来电
-        } else if (call.details.state == Call.STATE_CONNECTING) {
-            //outgoing 去电
-        }
+        //来电号码 去电号码
+        val phoneNumber = call.details?.handle?.schemeSpecificPart ?: ""
 
         //保存call对象用语 电话操作 接听 挂断等等操作
         PhoneManager.call = call
 
+        call.registerCallback(callback)
 
         //发送一个全屏通知的强提醒，可以点击进入通话页面
         val intent = Intent(Intent.ACTION_MAIN, null)
@@ -116,14 +117,28 @@ class MyInCallService : InCallService() {
         val mgr = getSystemService(NotificationManager::class.java)
         mgr.createNotificationChannel(channel)
 
-        val builder = NotificationCompat.Builder(this, "1").setOngoing(true)
-            .setPriority(NotificationCompat.PRIORITY_HIGH).setContentIntent(pendingIntent)
-            .setFullScreenIntent(pendingIntent, true)
-            .setSmallIcon(R.drawable.ic_launcher_foreground).setContentText("新电话")
-            .setContentTitle("新电话来了")
+        if (call.details.state == Call.STATE_RINGING) {
+            //incoming 来电
+            startForegroundService(Intent(this, MyService::class.java).also {
+                it.putExtra("call_type", 1)
+            })
+        } else if (call.details.state == Call.STATE_CONNECTING) {
+            //outgoing 去电
+            startForegroundService(Intent(this, MyService::class.java).also {
+                it.putExtra("call_type", 2)
+            })
+        }
 
-        mgr.notify(100, builder.build())
-
+//        //发送全屏通知
+//        val builder = NotificationCompat.Builder(this, "1").setOngoing(true)
+//            .setPriority(NotificationCompat.PRIORITY_HIGH).setContentIntent(pendingIntent)
+//            .setFullScreenIntent(pendingIntent, true)
+//            .setCategory(Notification.CATEGORY_CALL)
+//            .setVisibility(Notification.VISIBILITY_PUBLIC)
+//            .setWhen(System.currentTimeMillis())
+//            .setSmallIcon(R.drawable.ic_launcher_foreground).setContentText("新电话")
+//            .setContentTitle("新电话来了")
+//        mgr.notify(100, builder.build())
     }
 
 
