@@ -6,6 +6,7 @@ import android.app.PendingIntent
 import android.app.Person
 import android.app.Service
 import android.content.Intent
+import android.graphics.drawable.Icon
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
@@ -25,8 +26,13 @@ class MyService : Service() {
 
         val callType = intent?.getIntExtra("call_type", 0) ?: 1
 
+        val phoneNumber = PhoneManager.call?.details?.handle?.schemeSpecificPart?:""
+
         val caller =
-            Person.Builder().setName(getString(R.string.app_name)).setImportant(false).build()
+            Person.Builder().setName("电话")
+                .setImportant(false)
+                .setIcon(Icon.createWithResource(this , android.R.drawable.ic_menu_call))
+                .build()
         val declineIntent = getCallDeclinePendingIntent()
         val answerIntent = getCallAnswerPendingIntent()
 
@@ -50,6 +56,7 @@ class MyService : Service() {
             } catch (e: IllegalArgumentException) {
                 e.printStackTrace()
             }
+            setContentText(phoneNumber)
             setSmallIcon(R.drawable.ic_launcher_foreground)
             setCategory(Notification.CATEGORY_CALL)
             setVisibility(Notification.VISIBILITY_PUBLIC)
