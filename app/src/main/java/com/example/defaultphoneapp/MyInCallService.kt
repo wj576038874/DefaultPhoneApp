@@ -71,6 +71,10 @@ class MyInCallService : InCallService() {
                 Call.STATE_ACTIVE -> {
                     //电话接通
                     Log.d("phone", "==STATE_ACTIVE")
+                    startActivity(Intent(this@MyInCallService, MyPhoneCallActivity::class.java)
+                        .also {
+                            it.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        })
                     stopService(Intent(this@MyInCallService, MyService::class.java))
                 }
 
