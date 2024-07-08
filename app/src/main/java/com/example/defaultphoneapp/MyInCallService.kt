@@ -77,7 +77,7 @@ class MyInCallService : InCallService() {
                         })
 //                    stopService(Intent(this@MyInCallService, MyService::class.java))
                     startService(Intent(this@MyInCallService, MyService::class.java).also {
-                        it.putExtra("stop", true)
+                        it.setAction(MyService.STOP_FOREGROUND)
                     })
                 }
 
@@ -95,7 +95,7 @@ class MyInCallService : InCallService() {
                     Log.d("phone", "STATE_DISCONNECTED")
 //                    stopService(Intent(this@MyInCallService, MyService::class.java))
                     startService(Intent(this@MyInCallService, MyService::class.java).also {
-                        it.putExtra("stop", true)
+                        it.setAction(MyService.STOP_FOREGROUND)
                     })
                 }
             }
@@ -137,13 +137,13 @@ class MyInCallService : InCallService() {
                 //incoming 来电
                 ContextCompat.startForegroundService(this,
                     Intent(this, MyService::class.java).also {
-                        it.putExtra("call_type", 1)
+                        it.putExtra(MyService.CALL_TYPE, 1)
                     })
             } else if (call.details.state == Call.STATE_CONNECTING) {
                 //outgoing 去电
                 ContextCompat.startForegroundService(this,
                     Intent(this, MyService::class.java).also {
-                        it.putExtra("call_type", 2)
+                        it.putExtra(MyService.CALL_TYPE, 2)
                     })
             }
         } else {
