@@ -86,8 +86,6 @@ class MyInCallService : InCallService() {
     }
 
 
-    @SuppressLint("WrongConstant")
-    @RequiresApi(Build.VERSION_CODES.S)
     override fun onCallAdded(call: Call) {
         super.onCallAdded(call)
 
@@ -129,15 +127,26 @@ class MyInCallService : InCallService() {
             })
         }
 
-//        //发送全屏通知
+//        //发送全屏通知 兼容低版本的来电通知，可以接听电话和拒绝电话
 //        val builder = NotificationCompat.Builder(this, "1").setOngoing(true)
 //            .setPriority(NotificationCompat.PRIORITY_HIGH).setContentIntent(pendingIntent)
-//            .setFullScreenIntent(pendingIntent, true)
-//            .setCategory(Notification.CATEGORY_CALL)
-//            .setVisibility(Notification.VISIBILITY_PUBLIC)
-//            .setWhen(System.currentTimeMillis())
+//            .setFullScreenIntent(pendingIntent, true).setCategory(Notification.CATEGORY_CALL)
+//            .setVisibility(Notification.VISIBILITY_PUBLIC).setWhen(System.currentTimeMillis())
 //            .setSmallIcon(R.drawable.ic_launcher_foreground).setContentText("新电话")
 //            .setContentTitle("新电话来了")
+//            .addAction(
+//                NotificationCompat.Action.Builder(
+//                    R.drawable.ic_call_answer,
+//                    "接听",
+//                    NotificationBroadcastReceiver.getCallAnswerPendingIntent(this)
+//                ).setShowsUserInterface(false).build()
+//            ).addAction(
+//                NotificationCompat.Action.Builder(
+//                    R.drawable.ic_call_end,
+//                    "拒绝",
+//                    NotificationBroadcastReceiver.getCallAnswerPendingIntent(this)
+//                ).setShowsUserInterface(false).build()
+//            )
 //        mgr.notify(100, builder.build())
     }
 

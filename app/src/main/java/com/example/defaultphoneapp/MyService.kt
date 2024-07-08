@@ -21,20 +21,19 @@ class MyService : Service() {
         super.onCreate()
     }
 
-    @RequiresApi(Build.VERSION_CODES.S)
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
 
         val callType = intent?.getIntExtra("call_type", 0) ?: 1
 
-        val phoneNumber = PhoneManager.call?.details?.handle?.schemeSpecificPart?:""
+        val phoneNumber = PhoneManager.call?.details?.handle?.schemeSpecificPart ?: ""
 
         val caller =
             Person.Builder().setName("电话")
                 .setImportant(false)
-                .setIcon(Icon.createWithResource(this , android.R.drawable.ic_menu_call))
+                .setIcon(Icon.createWithResource(this, android.R.drawable.ic_menu_call))
                 .build()
-        val declineIntent = getCallDeclinePendingIntent()
-        val answerIntent = getCallAnswerPendingIntent()
+        val declineIntent = NotificationBroadcastReceiver.getCallDeclinePendingIntent(this)
+        val answerIntent = NotificationBroadcastReceiver.getCallAnswerPendingIntent(this)
 
         val intent = Intent(Intent.ACTION_MAIN, null)
         intent.setFlags(Intent.FLAG_ACTIVITY_NO_USER_ACTION or Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -69,39 +68,12 @@ class MyService : Service() {
         }
 
         val notification = builder.build()
-        val mgr = getSystemService(NotificationManager::class.java)
+//        val mgr = getSystemService(NotificationManager::class.java)
 //        mgr.notify(100 , notification)
         startForeground(100, notification)
         return super.onStartCommand(intent, flags, startId)
     }
 
-    private fun getCallDeclinePendingIntent(): PendingIntent {
-        val hangupIntent = Intent(this, NotificationBroadcastReceiver::class.java)
-        hangupIntent.action = "INTENT_HANGUP_CALL_NOTIF_ACTION"
-        hangupIntent.putExtra("INTENT_NOTIF_ID", 100)
-        hangupIntent.putExtra("INTENT_REMOTE_ADDRESS", "123456")
-
-        return PendingIntent.getBroadcast(
-            this,
-            100,
-            hangupIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-    }
-
-    private fun getCallAnswerPendingIntent(): PendingIntent {
-        val answerIntent = Intent(this, NotificationBroadcastReceiver::class.java)
-        answerIntent.action = "INTENT_ANSWER_CALL_NOTIF_ACTION"
-        answerIntent.putExtra("INTENT_NOTIF_ID", 100)
-        answerIntent.putExtra("INTENT_REMOTE_ADDRESS", "654321")
-
-        return PendingIntent.getBroadcast(
-            this,
-            100,
-            answerIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-    }
 
     override fun onDestroy() {
         super.onDestroy()
