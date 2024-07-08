@@ -2,6 +2,18 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!--
+    在AndroidManifest.xml中使用<uses-feature>标签来声明应用使用的硬件功能。android:required属性用于指示该硬件功能是否是应用运行所必需的。
+    具体而言：
+    android:required="true"（默认值）：表示应用必须依赖该硬件功能。如果设备不支持该硬件功能，则应用将无法安装。例如：
+    <uses-feature android:name="android.hardware.telephony" android:required="true" />
+    这种情况下，如果设备没有电话功能（即不支持android.hardware.telephony），则应用将无法安装。
+
+    android:required="false"：表示该硬件功能对应用是可选的。如果设备不支持该硬件功能，应用仍然可以安装并运行，但某些功能可能不可用。例如：
+    <uses-feature android:name="android.hardware.telephony" android:required="false" />
+    这种情况下，即使设备没有电话功能，应用也可以安装和运行。-->
+
+    <!--该应用需要使用电话硬件功能，required=false 代表 如果手机没有电话硬件也可以安装，required=true  如果手机没有电话硬件则无法安装-->
     <uses-feature
         android:name="android.hardware.telephony"
         android:required="false" />
@@ -12,6 +24,7 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_PHONE_CALL"/>
     <uses-permission android:name="android.permission.MANAGE_OWN_CALLS"/>
+    <uses-permission android:name="android.permission.PROCESS_OUTGOING_CALLS" />
 
     <application
         android:allowBackup="true"

@@ -2,12 +2,20 @@ package com.example.defaultphoneapp
 
 import android.annotation.SuppressLint
 import android.app.role.RoleManager
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.telecom.TelecomManager
+import android.telephony.TelephonyCallback
+import android.telephony.TelephonyManager
+import android.telephony.TelephonyManager.CALL_STATE_IDLE
+import android.telephony.TelephonyManager.CALL_STATE_OFFHOOK
+import android.telephony.TelephonyManager.CALL_STATE_RINGING
+import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
@@ -45,6 +53,15 @@ class MainActivity : AppCompatActivity() {
             insets
         }
 
+
+//        val phoneCallReceiver = PhoneCallReceiver()
+//        val intentFilter = IntentFilter()
+//        intentFilter.addAction(TelephonyManager.ACTION_PHONE_STATE_CHANGED)
+//        intentFilter.addAction(Intent.ACTION_NEW_OUTGOING_CALL)
+//        registerReceiver(phoneCallReceiver, intentFilter)
+//
+//        listenPhoneState()
+
         button = findViewById(R.id.btn)
         btnCall = findViewById(R.id.btn_call)
         editText = findViewById(R.id.edit)
@@ -79,7 +96,33 @@ class MainActivity : AppCompatActivity() {
         }
 
         findViewById<View>(R.id.btn_call2).setOnClickListener {
-            startActivity(Intent(this , MyPhoneCallActivity::class.java))
+            startActivity(Intent(this, MyPhoneCallActivity::class.java))
+        }
+    }
+
+    private fun listenPhoneState() {
+        val telecomManager = getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            telecomManager.registerTelephonyCallback(
+                mainExecutor,
+                object : TelephonyCallback(), TelephonyCallback.CallStateListener {
+                    override fun onCallStateChanged(state: Int) {
+                        when (state) {
+                            CALL_STATE_IDLE -> {
+                                Log.d("listenPhoneState", "Call state: 挂断");
+                            }
+
+                            CALL_STATE_RINGING -> {
+                                Log.d("listenPhoneState", "Call state: 响铃");
+                            }
+
+                            CALL_STATE_OFFHOOK -> {
+                                Log.d("listenPhoneState", "Call state: 接通");
+                            }
+
+                        }
+                    }
+                })
         }
     }
 
