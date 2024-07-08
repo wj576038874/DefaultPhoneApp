@@ -75,7 +75,10 @@ class MyInCallService : InCallService() {
                         .also {
                             it.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                         })
-                    stopService(Intent(this@MyInCallService, MyService::class.java))
+//                    stopService(Intent(this@MyInCallService, MyService::class.java))
+                    startService(Intent(this@MyInCallService, MyService::class.java).also {
+                        it.putExtra("stop", true)
+                    })
                 }
 
                 Call.STATE_CONNECTING -> {
@@ -90,7 +93,10 @@ class MyInCallService : InCallService() {
                 Call.STATE_DISCONNECTED -> {
                     //挂断
                     Log.d("phone", "STATE_DISCONNECTED")
-                    stopService(Intent(this@MyInCallService, MyService::class.java))
+//                    stopService(Intent(this@MyInCallService, MyService::class.java))
+                    startService(Intent(this@MyInCallService, MyService::class.java).also {
+                        it.putExtra("stop", true)
+                    })
                 }
             }
         }

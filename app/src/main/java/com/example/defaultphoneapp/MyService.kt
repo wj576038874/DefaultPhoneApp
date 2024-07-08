@@ -23,6 +23,12 @@ class MyService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
 
         val callType = intent?.getIntExtra("call_type", 0) ?: 1
+        val stop = intent?.getBooleanExtra("stop", false) ?: false
+
+        if (stop) {
+            stopForeground(STOP_FOREGROUND_DETACH)
+            return super.onStartCommand(intent, flags, startId)
+        }
 
         val phoneNumber = PhoneManager.call?.details?.handle?.schemeSpecificPart ?: ""
 
@@ -43,16 +49,18 @@ class MyService : Service() {
                 .build()
         val builder = NotificationCompat.Builder(this, CHANNEL_ID).apply {
             try {
-                setStyle(if (callType == 1) {
-                    NotificationCompat.CallStyle.forIncomingCall(
-                        caller, declineIntent, answerIntent
-                    )
-                } else {
-                    NotificationCompat.CallStyle.forOngoingCall(
-                        caller,
-                        declineIntent,
-                    )
-                })
+                setStyle(
+                    if (callType == 1) {
+                        NotificationCompat.CallStyle.forIncomingCall(
+                            caller, declineIntent, answerIntent
+                        )
+                    } else {
+                        NotificationCompat.CallStyle.forOngoingCall(
+                            caller,
+                            declineIntent,
+                        )
+                    }
+                )
             } catch (e: IllegalArgumentException) {
                 e.printStackTrace()
             }
@@ -72,6 +80,7 @@ class MyService : Service() {
 //        val mgr = getSystemService(NotificationManager::class.java)
 //        mgr.notify(100 , notification)
         startForeground(NOTIFICATION_ID, notification)
+
         return super.onStartCommand(intent, flags, startId)
     }
 
