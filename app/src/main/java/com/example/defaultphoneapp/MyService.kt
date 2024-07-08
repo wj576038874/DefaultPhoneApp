@@ -26,7 +26,7 @@ class MyService : Service() {
         val stop = intent?.getBooleanExtra("stop", false) ?: false
 
         if (stop) {
-            stopForeground(STOP_FOREGROUND_DETACH)
+            stopForeground(STOP_FOREGROUND_REMOVE)
             return super.onStartCommand(intent, flags, startId)
         }
 
