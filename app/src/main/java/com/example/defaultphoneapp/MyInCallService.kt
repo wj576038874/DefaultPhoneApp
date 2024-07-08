@@ -1,5 +1,6 @@
 package com.example.defaultphoneapp
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Notification
 import android.app.NotificationChannel
@@ -7,6 +8,7 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Person
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.media.AudioAttributes
 import android.media.RingtoneManager
 import android.os.Build
@@ -14,8 +16,12 @@ import android.telecom.Call
 import android.telecom.InCallService
 import android.util.Log
 import androidx.annotation.RequiresApi
+import androidx.core.app.ActivityCompat
+import androidx.core.app.NotificationChannelCompat
 import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
+import com.example.defaultphoneapp.NotificationBroadcastReceiver.Companion.CHANNEL_ID
 
 
 /**
@@ -103,35 +109,53 @@ class MyInCallService : InCallService() {
         intent.setClass(this, MyPhoneCallActivity::class.java)
         val pendingIntent = PendingIntent.getActivity(this, 1, intent, PendingIntent.FLAG_IMMUTABLE)
 
-        val channel = NotificationChannel("1", "Incoming Calls", NotificationManager.IMPORTANCE_MAX)
-
         val ringtoneUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
-        channel.setSound(
-            ringtoneUri,
-            AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_NOTIFICATION_RINGTONE)
-                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION).build()
-        )
+        val channel =
+            NotificationChannelCompat.Builder(CHANNEL_ID, NotificationManagerCompat.IMPORTANCE_MAX)
+                .setName("来电通知").setSound(
+                    ringtoneUri,
+                    AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_NOTIFICATION_RINGTONE)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION).build()
+                ).build()
 
-        val mgr = getSystemService(NotificationManager::class.java)
-        mgr.createNotificationChannel(channel)
+        val notificationManager = NotificationManagerCompat.from(this)
+        notificationManager.createNotificationChannel(channel)
 
-        if (call.details.state == Call.STATE_RINGING) {
-            //incoming 来电
-            startForegroundService(Intent(this, MyService::class.java).also {
-                it.putExtra("call_type", 1)
-            })
-        } else if (call.details.state == Call.STATE_CONNECTING) {
-            //outgoing 去电
-            startForegroundService(Intent(this, MyService::class.java).also {
-                it.putExtra("call_type", 2)
-            })
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (call.details.state == Call.STATE_RINGING) {
+                //incoming 来电
+                ContextCompat.startForegroundService(this,
+                    Intent(this, MyService::class.java).also {
+                        it.putExtra("call_type", 1)
+                    })
+            } else if (call.details.state == Call.STATE_CONNECTING) {
+                //outgoing 去电
+                ContextCompat.startForegroundService(this,
+                    Intent(this, MyService::class.java).also {
+                        it.putExtra("call_type", 2)
+                    })
+            }
+        } else {
+            if (call.state == Call.STATE_RINGING) {
+                //incoming 来电
+                ContextCompat.startForegroundService(this,
+                    Intent(this, MyService::class.java).also {
+                        it.putExtra("call_type", 1)
+                    })
+            } else if (call.state == Call.STATE_CONNECTING) {
+                //outgoing 去电
+                ContextCompat.startForegroundService(this,
+                    Intent(this, MyService::class.java).also {
+                        it.putExtra("call_type", 2)
+                    })
+            }
         }
 
 //        //发送全屏通知 兼容低版本的来电通知，可以接听电话和拒绝电话
 //        val builder = NotificationCompat.Builder(this, "1").setOngoing(true)
 //            .setPriority(NotificationCompat.PRIORITY_HIGH).setContentIntent(pendingIntent)
-//            .setFullScreenIntent(pendingIntent, true).setCategory(Notification.CATEGORY_CALL)
-//            .setVisibility(Notification.VISIBILITY_PUBLIC).setWhen(System.currentTimeMillis())
+//            .setFullScreenIntent(pendingIntent, true).setCategory(NotificationCompat.CATEGORY_CALL)
+//            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC).setWhen(System.currentTimeMillis())
 //            .setSmallIcon(R.drawable.ic_launcher_foreground).setContentText("新电话")
 //            .setContentTitle("新电话来了")
 //            .addAction(
@@ -147,7 +171,16 @@ class MyInCallService : InCallService() {
 //                    NotificationBroadcastReceiver.getCallAnswerPendingIntent(this)
 //                ).setShowsUserInterface(false).build()
 //            )
-//        mgr.notify(100, builder.build())
+//
+//        //判断权限 有权限才发通知
+//        if (ActivityCompat.checkSelfPermission(
+//                this,
+//                Manifest.permission.POST_NOTIFICATIONS
+//            ) == PackageManager.PERMISSION_GRANTED
+//        ) {
+//            notificationManager.notify(100, builder.build())
+//            return
+//        }
     }
 
 

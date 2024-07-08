@@ -1,16 +1,15 @@
 package com.example.defaultphoneapp
 
-import android.app.Notification
-import android.app.NotificationManager
 import android.app.PendingIntent
-import android.app.Person
 import android.app.Service
 import android.content.Intent
-import android.graphics.drawable.Icon
-import android.os.Build
 import android.os.IBinder
 import android.util.Log
-import androidx.annotation.RequiresApi
+import androidx.core.app.NotificationCompat
+import androidx.core.app.Person
+import androidx.core.graphics.drawable.IconCompat
+import com.example.defaultphoneapp.NotificationBroadcastReceiver.Companion.CHANNEL_ID
+import com.example.defaultphoneapp.NotificationBroadcastReceiver.Companion.NOTIFICATION_ID
 
 /**
  * Created by wenjie on 2024/0702.
@@ -27,11 +26,7 @@ class MyService : Service() {
 
         val phoneNumber = PhoneManager.call?.details?.handle?.schemeSpecificPart ?: ""
 
-        val caller =
-            Person.Builder().setName("电话")
-                .setImportant(false)
-                .setIcon(Icon.createWithResource(this, android.R.drawable.ic_menu_call))
-                .build()
+
         val declineIntent = NotificationBroadcastReceiver.getCallDeclinePendingIntent(this)
         val answerIntent = NotificationBroadcastReceiver.getCallAnswerPendingIntent(this)
 
@@ -40,25 +35,31 @@ class MyService : Service() {
         intent.setClass(this, MyPhoneCallActivity::class.java)
         val pendingIntent = PendingIntent.getActivity(this, 1, intent, PendingIntent.FLAG_IMMUTABLE)
 
-        val builder = Notification.Builder(this, "1").apply {
+
+        val caller =
+            Person.Builder().setName("电话")
+                .setImportant(false)
+                .setIcon(IconCompat.createWithResource(this, android.R.drawable.ic_menu_call))
+                .build()
+        val builder = NotificationCompat.Builder(this, CHANNEL_ID).apply {
             try {
-                style = if (callType == 1) {
-                    Notification.CallStyle.forIncomingCall(
+                setStyle(if (callType == 1) {
+                    NotificationCompat.CallStyle.forIncomingCall(
                         caller, declineIntent, answerIntent
                     )
                 } else {
-                    Notification.CallStyle.forOngoingCall(
+                    NotificationCompat.CallStyle.forOngoingCall(
                         caller,
                         declineIntent,
                     )
-                }
+                })
             } catch (e: IllegalArgumentException) {
                 e.printStackTrace()
             }
             setContentText(phoneNumber)
             setSmallIcon(R.drawable.ic_launcher_foreground)
-            setCategory(Notification.CATEGORY_CALL)
-            setVisibility(Notification.VISIBILITY_PUBLIC)
+            setCategory(NotificationCompat.CATEGORY_CALL)
+            setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             setWhen(System.currentTimeMillis())
             setAutoCancel(false)
             setShowWhen(true)
@@ -70,7 +71,7 @@ class MyService : Service() {
         val notification = builder.build()
 //        val mgr = getSystemService(NotificationManager::class.java)
 //        mgr.notify(100 , notification)
-        startForeground(100, notification)
+        startForeground(NOTIFICATION_ID, notification)
         return super.onStartCommand(intent, flags, startId)
     }
 

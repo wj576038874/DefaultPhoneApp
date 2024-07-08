@@ -1,5 +1,6 @@
 package com.example.defaultphoneapp
 
+import android.app.Notification
 import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -20,10 +21,15 @@ class NotificationBroadcastReceiver : BroadcastReceiver() {
     }
 
     companion object{
+
+        const val CHANNEL_ID = "1"
+
+        const val NOTIFICATION_ID = 10001
+
          fun getCallDeclinePendingIntent(context: Context): PendingIntent {
             val hangupIntent = Intent(context, NotificationBroadcastReceiver::class.java)
             hangupIntent.action = "INTENT_HANGUP_CALL_NOTIF_ACTION"
-            hangupIntent.putExtra("INTENT_NOTIF_ID", 100)
+            hangupIntent.putExtra("INTENT_NOTIF_ID", NOTIFICATION_ID)
             hangupIntent.putExtra("INTENT_REMOTE_ADDRESS", "123456")
 
             return PendingIntent.getBroadcast(
@@ -37,7 +43,7 @@ class NotificationBroadcastReceiver : BroadcastReceiver() {
          fun getCallAnswerPendingIntent(context: Context): PendingIntent {
             val answerIntent = Intent(context, NotificationBroadcastReceiver::class.java)
             answerIntent.action = "INTENT_ANSWER_CALL_NOTIF_ACTION"
-            answerIntent.putExtra("INTENT_NOTIF_ID", 100)
+            answerIntent.putExtra("INTENT_NOTIF_ID", NOTIFICATION_ID)
             answerIntent.putExtra("INTENT_REMOTE_ADDRESS", "654321")
 
             return PendingIntent.getBroadcast(
