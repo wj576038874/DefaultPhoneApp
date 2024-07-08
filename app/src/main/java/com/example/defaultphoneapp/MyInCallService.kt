@@ -71,6 +71,7 @@ class MyInCallService : InCallService() {
                 Call.STATE_ACTIVE -> {
                     //电话接通
                     Log.d("phone", "==STATE_ACTIVE")
+                    stopService(Intent(this@MyInCallService, MyService::class.java))
                 }
 
                 Call.STATE_CONNECTING -> {
