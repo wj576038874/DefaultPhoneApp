@@ -103,6 +103,8 @@
         </receiver>
 
         <activity android:name=".calllog.CallLogActivity"/>
+
+        <service android:name=".calllog.CallLogService"/>
     </application>
 
 </manifest>

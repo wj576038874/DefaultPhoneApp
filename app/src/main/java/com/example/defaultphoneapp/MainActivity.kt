@@ -32,6 +32,7 @@ import androidx.loader.app.LoaderManager
 import com.example.defaultphoneapp.calllog.CallLogActivity
 import com.example.defaultphoneapp.calllog.CallLogContentObserver
 import com.example.defaultphoneapp.calllog.CallLogLoadCallback
+import com.example.defaultphoneapp.calllog.CallLogService
 import com.example.defaultphoneapp.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
@@ -60,9 +61,8 @@ class MainActivity : AppCompatActivity() {
             insets
         }
 
-        //监听系统通话记录变化
-        val contentObserver = CallLogContentObserver(this , Handler(Looper.getMainLooper()))
-        contentResolver.registerContentObserver(CallLog.Calls.CONTENT_URI , true , contentObserver)
+        //监听通话记录变化服务
+        startService(Intent(this , CallLogService::class.java))
 
 //        val phoneCallReceiver = PhoneCallReceiver()
 //        val intentFilter = IntentFilter()
