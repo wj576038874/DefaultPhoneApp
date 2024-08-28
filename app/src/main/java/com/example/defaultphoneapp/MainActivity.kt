@@ -5,6 +5,7 @@ import android.app.role.RoleManager
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.PackageManager
 import android.graphics.Color
 import android.net.Uri
 import android.os.Build
@@ -25,7 +26,9 @@ import android.widget.EditText
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.loader.app.LoaderManager
@@ -48,6 +51,33 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+    private val permissions = arrayOf(
+        //通话记录 权限组 以下权限一个允许全部就允许，反则亦然
+        android.Manifest.permission.READ_CALL_LOG,
+        android.Manifest.permission.WRITE_CALL_LOG,
+
+        //电话 权限组 以下权限一个允许全部就允许，反则亦然
+        android.Manifest.permission.READ_PHONE_STATE,
+        android.Manifest.permission.CALL_PHONE,
+        android.Manifest.permission.ANSWER_PHONE_CALLS,
+        android.Manifest.permission.READ_PHONE_NUMBERS,
+    )
+
+    private val permissionsLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { result ->
+            //已经允许的权限数量和 声明的权限数量相等 说明权限全部允许
+            val granted = result.filter { it.value }
+            if (granted.size == permissions.size) {
+                startCallLogChangeService()
+            } else {
+                AlertDialog.Builder(this).setTitle("温馨提示").setMessage("请授予必须要的权限")
+                    .setPositiveButton("ok") { dialog, _ ->
+                        dialog.cancel()
+                        requestPermissions()
+                    }.setNegativeButton("cancel", null).show()
+            }
+        }
+
     private lateinit var binding: ActivityMainBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -61,8 +91,11 @@ class MainActivity : AppCompatActivity() {
             insets
         }
 
-        //监听通话记录变化服务
-        startService(Intent(this , CallLogService::class.java))
+        if (permissionGranted()) {
+            startCallLogChangeService()
+        } else {
+            permissionsLauncher.launch(permissions)
+        }
 
 //        val phoneCallReceiver = PhoneCallReceiver()
 //        val intentFilter = IntentFilter()
@@ -105,7 +138,7 @@ class MainActivity : AppCompatActivity() {
             startActivity(Intent(this, CallLogActivity::class.java))
         }
 
-       binding.btnCall2.setOnClickListener {
+        binding.btnCall2.setOnClickListener {
             startActivity(Intent(this, MyPhoneCallActivity::class.java))
         }
     }
@@ -136,6 +169,9 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * 拨打电话
+     */
     @SuppressLint("MissingPermission")
     private fun call(phoneNumber: String) {
         val telecomManager = getSystemService(TELECOM_SERVICE) as TelecomManager
@@ -158,11 +194,48 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * 是否被设置为默认电话应用
+     */
     private fun isDefaultPhoneCallApp(): Boolean {
         val manger = getSystemService(TELECOM_SERVICE) as TelecomManager
         if (manger.defaultDialerPackage != null) {
             return manger.defaultDialerPackage == packageName
         }
         return false
+    }
+
+    /**
+     * 开启服务 监听通话记录改变
+     */
+    private fun startCallLogChangeService() {
+        //开启监听通话记录变化服务
+        startService(Intent(this, CallLogService::class.java))
+    }
+
+    /**
+     * 请求权限
+     */
+    private fun requestPermissions() {
+        permissionsLauncher.launch(permissions)
+    }
+
+    /**
+     * 检测权限是否允许
+     */
+    private fun permissionGranted(): Boolean {
+        return ContextCompat.checkSelfPermission(
+            this, permissions[0]
+        ) == PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(
+            this, permissions[1]
+        ) == PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(
+            this, permissions[2]
+        ) == PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(
+            this, permissions[3]
+        ) == PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(
+            this, permissions[4]
+        ) == PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(
+            this, permissions[5]
+        ) == PackageManager.PERMISSION_GRANTED
     }
 }
