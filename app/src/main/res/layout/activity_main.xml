@@ -46,4 +46,13 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/edit" />
 
+    <Button
+        android:id="@+id/btn_call_log"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="通话记录"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btn_call2" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

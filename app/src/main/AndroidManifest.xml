@@ -101,6 +101,8 @@
             android:exported="false">
 
         </receiver>
+
+        <activity android:name=".calllog.CallLogActivity"/>
     </application>
 
 </manifest>

@@ -9,6 +9,9 @@ import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.provider.CallLog
 import android.telecom.TelecomManager
 import android.telephony.TelephonyCallback
 import android.telephony.TelephonyManager
@@ -25,34 +28,41 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.loader.app.LoaderManager
+import com.example.defaultphoneapp.calllog.CallLogActivity
+import com.example.defaultphoneapp.calllog.CallLogContentObserver
+import com.example.defaultphoneapp.calllog.CallLogLoadCallback
+import com.example.defaultphoneapp.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
 
     private val activityResultLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == RESULT_OK) {
-                button.text = "已经是默认电话应用"
-                button.setBackgroundColor(Color.GREEN)
+                binding.btn.text = "已经是默认电话应用"
+                binding.btn.setBackgroundColor(Color.GREEN)
             } else {
-                button.text = "不是默认电话应用"
-                button.setBackgroundColor(Color.RED)
+                binding.btn.text = "不是默认电话应用"
+                binding.btn.setBackgroundColor(Color.RED)
             }
         }
 
-    private lateinit var button: Button
-    private lateinit var btnCall: Button
-    private lateinit var editText: EditText
+    private lateinit var binding: ActivityMainBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContentView(R.layout.activity_main)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
 
+        //监听系统通话记录变化
+        val contentObserver = CallLogContentObserver(this , Handler(Looper.getMainLooper()))
+        contentResolver.registerContentObserver(CallLog.Calls.CONTENT_URI , true , contentObserver)
 
 //        val phoneCallReceiver = PhoneCallReceiver()
 //        val intentFilter = IntentFilter()
@@ -62,20 +72,16 @@ class MainActivity : AppCompatActivity() {
 //
 //        listenPhoneState()
 
-        button = findViewById(R.id.btn)
-        btnCall = findViewById(R.id.btn_call)
-        editText = findViewById(R.id.edit)
-
         if (isDefaultPhoneCallApp()) {
-            button.text = "已经是默认电话应用"
-            button.setBackgroundColor(Color.GREEN)
+            binding.btn.text = "已经是默认电话应用"
+            binding.btn.setBackgroundColor(Color.GREEN)
 //            startService(Intent(this , MyInCallService::class.java))
         } else {
-            button.text = "不是默认电话应用"
-            button.setBackgroundColor(Color.RED)
+            binding.btn.text = "不是默认电话应用"
+            binding.btn.setBackgroundColor(Color.RED)
         }
 
-        button.setOnClickListener {
+        binding.btn.setOnClickListener {
             val intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 val roleManager = getSystemService(ROLE_SERVICE) as RoleManager
                 roleManager.createRequestRoleIntent(RoleManager.ROLE_DIALER)
@@ -88,14 +94,18 @@ class MainActivity : AppCompatActivity() {
             activityResultLauncher.launch(intent)
         }
 
-        btnCall.setOnClickListener {
-            val phoneNumber = editText.text.toString().trim()
+        binding.btnCall.setOnClickListener {
+            val phoneNumber = binding.edit.text.toString().trim()
             if (phoneNumber.isNotBlank()) {
                 call(phoneNumber)
             }
         }
 
-        findViewById<View>(R.id.btn_call2).setOnClickListener {
+        binding.btnCallLog.setOnClickListener {
+            startActivity(Intent(this, CallLogActivity::class.java))
+        }
+
+       binding.btnCall2.setOnClickListener {
             startActivity(Intent(this, MyPhoneCallActivity::class.java))
         }
     }
