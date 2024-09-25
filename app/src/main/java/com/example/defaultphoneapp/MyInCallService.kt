@@ -31,6 +31,27 @@ import com.example.defaultphoneapp.NotificationBroadcastReceiver.Companion.CHANN
 class MyInCallService : InCallService() {
 
 
+    /**
+     * 通话状态发生变化监听
+     * 拨打-接通-对方挂断
+     * STATE_DIALING->STATE_ACTIVE->STATE_DISCONNECTED
+     * 拨打-接通-自己挂断
+     * STATE_DIALING->STATE_ACTIVE->STATE_DISCONNECTING->STATE_DISCONNECTED
+     * 拨打-自己挂断
+     * STATE_DIALING->STATE_DISCONNECTING->STATE_DISCONNECTED
+     * 拨打-对方挂断
+     * STATE_DIALING -> 提示正在通话中...直到自动或者手动挂断->STATE_DISCONNECTED
+     *
+     * 呼入-自己挂断
+     * STATE_DISCONNECTING->STATE_DISCONNECTED
+     * 呼入-对方挂断
+     * STATE_DISCONNECTED
+     *
+     * 呼入-接通-自己挂断
+     * STATE_ACTIVE->STATE_DISCONNECTING->STATE_DISCONNECTED
+     * 呼入-接通-对方挂断
+     * STATE_ACTIVE->STATE_DISCONNECTED
+     */
     private val callback = object : Call.Callback() {
         override fun onStateChanged(call: Call, state: Int) {
             super.onStateChanged(call, state)
