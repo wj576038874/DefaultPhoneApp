@@ -185,6 +185,8 @@ class MainActivity : AppCompatActivity() {
             }
             val phoneAccountHandle = phoneAccountHandles[0]
             val phoneAccount = telecomManager.getPhoneAccount(phoneAccountHandle)//sim1的卡信息
+            phoneAccount.label//运营商
+            phoneAccount.subscriptionAddress//号码
             val extras = Bundle()
             extras.putParcelable(TelecomManager.EXTRA_PHONE_ACCOUNT_HANDLE, phoneAccountHandles[0])
             telecomManager.placeCall(uri, extras)
