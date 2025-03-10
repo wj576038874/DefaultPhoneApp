@@ -32,22 +32,23 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.loader.app.LoaderManager
+import androidx.viewpager2.widget.ViewPager2
 import com.example.defaultphoneapp.calllog.CallLogActivity
 import com.example.defaultphoneapp.calllog.CallLogContentObserver
 import com.example.defaultphoneapp.calllog.CallLogLoadCallback
 import com.example.defaultphoneapp.calllog.CallLogService
 import com.example.defaultphoneapp.databinding.ActivityMainBinding
+import com.example.defaultphoneapp.fragment.HomeCalllogFragment
+import com.example.defaultphoneapp.fragment.HomeMainFragment
 
 class MainActivity : AppCompatActivity() {
 
     private val activityResultLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == RESULT_OK) {
-                binding.btn.text = "已经是默认电话应用"
-                binding.btn.setBackgroundColor(Color.GREEN)
+                //已经是默认电话应用
             } else {
-                binding.btn.text = "不是默认电话应用"
-                binding.btn.setBackgroundColor(Color.RED)
+                //不是默认电话应用
             }
         }
 
@@ -91,30 +92,46 @@ class MainActivity : AppCompatActivity() {
             insets
         }
 
+        val fragments = listOf(HomeMainFragment(), HomeCalllogFragment())
+        val pagerAdapter = MyPagerAdapter(this, fragments)
+        binding.viewpager.adapter = pagerAdapter
+
+        binding.menu.setOnNavigationItemSelectedListener {
+            when (it.itemId) {
+                R.id.main -> {
+                    binding.viewpager.currentItem = 0
+                }
+
+                R.id.calllog -> {
+                    binding.viewpager.currentItem = 1
+                }
+            }
+            true
+        }
+
+        binding.viewpager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
+            override fun onPageSelected(position: Int) {
+                super.onPageSelected(position)
+                when (position) {
+                    0 -> binding.menu.selectedItemId = R.id.main
+                    1 -> binding.menu.selectedItemId = R.id.calllog
+                }
+            }
+        })
+
         if (permissionGranted()) {
             startCallLogChangeService()
         } else {
             permissionsLauncher.launch(permissions)
         }
+    }
 
-//        val phoneCallReceiver = PhoneCallReceiver()
-//        val intentFilter = IntentFilter()
-//        intentFilter.addAction(TelephonyManager.ACTION_PHONE_STATE_CHANGED)
-//        intentFilter.addAction(Intent.ACTION_NEW_OUTGOING_CALL)
-//        registerReceiver(phoneCallReceiver, intentFilter)
-//
-//        listenPhoneState()
 
+    override fun onResume() {
+        super.onResume()
         if (isDefaultPhoneCallApp()) {
-            binding.btn.text = "已经是默认电话应用"
-            binding.btn.setBackgroundColor(Color.GREEN)
-//            startService(Intent(this , MyInCallService::class.java))
-        } else {
-            binding.btn.text = "不是默认电话应用"
-            binding.btn.setBackgroundColor(Color.RED)
-        }
 
-        binding.btn.setOnClickListener {
+        } else {
             val intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 val roleManager = getSystemService(ROLE_SERVICE) as RoleManager
                 roleManager.createRequestRoleIntent(RoleManager.ROLE_DIALER)
@@ -126,28 +143,12 @@ class MainActivity : AppCompatActivity() {
             }
             activityResultLauncher.launch(intent)
         }
-
-        binding.btnCall.setOnClickListener {
-            val phoneNumber = binding.edit.text.toString().trim()
-            if (phoneNumber.isNotBlank()) {
-                call(phoneNumber)
-            }
-        }
-
-        binding.btnCallLog.setOnClickListener {
-            startActivity(Intent(this, CallLogActivity::class.java))
-        }
-
-        binding.btnCall2.setOnClickListener {
-            startActivity(Intent(this, MyPhoneCallActivity::class.java))
-        }
     }
 
     private fun listenPhoneState() {
         val telecomManager = getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            telecomManager.registerTelephonyCallback(
-                mainExecutor,
+            telecomManager.registerTelephonyCallback(mainExecutor,
                 object : TelephonyCallback(), TelephonyCallback.CallStateListener {
                     override fun onCallStateChanged(state: Int) {
                         when (state) {
@@ -169,32 +170,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    /**
-     * 拨打电话
-     */
-    @SuppressLint("MissingPermission")
-    private fun call(phoneNumber: String) {
-        val telecomManager = getSystemService(TELECOM_SERVICE) as TelecomManager
-        val uri = Uri.fromParts("tel", phoneNumber, null)
-        val phoneAccountHandles = telecomManager.callCapablePhoneAccounts
-        if (phoneAccountHandles.size > 0) {
-            if (phoneAccountHandles.size > 1) {
-                //双卡
-            } else {
-                //单卡
-            }
-            val phoneAccountHandle = phoneAccountHandles[0]
-            val phoneAccount = telecomManager.getPhoneAccount(phoneAccountHandle)//sim1的卡信息
-            phoneAccount.label//运营商
-            phoneAccount.subscriptionAddress//号码
-            val extras = Bundle()
-            extras.putParcelable(TelecomManager.EXTRA_PHONE_ACCOUNT_HANDLE, phoneAccountHandles[0])
-            telecomManager.placeCall(uri, extras)
-        } else {
-            //没有sim卡无法拨打
-            Toast.makeText(this, "无sim卡", Toast.LENGTH_SHORT).show()
-        }
-    }
 
     /**
      * 是否被设置为默认电话应用
