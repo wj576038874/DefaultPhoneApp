@@ -13,6 +13,8 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.provider.CallLog
+import android.telecom.PhoneAccount
+import android.telecom.PhoneAccountHandle
 import android.telecom.TelecomManager
 import android.telephony.TelephonyCallback
 import android.telephony.TelephonyManager
@@ -37,6 +39,7 @@ import com.example.defaultphoneapp.calllog.CallLogContentObserver
 import com.example.defaultphoneapp.calllog.CallLogLoadCallback
 import com.example.defaultphoneapp.calllog.CallLogService
 import com.example.defaultphoneapp.databinding.ActivityMainBinding
+import java.net.URLDecoder
 
 class MainActivity : AppCompatActivity() {
 
@@ -180,16 +183,33 @@ class MainActivity : AppCompatActivity() {
         if (phoneAccountHandles.size > 0) {
             if (phoneAccountHandles.size > 1) {
                 //双卡
+                val textList = phoneAccountHandles.map {
+                    val phoneAccount = telecomManager.getPhoneAccount(it)
+                    "${phoneAccount.label}:${
+                        URLDecoder.decode(
+                            phoneAccount.subscriptionAddress.toString(),
+                            "UTF-8"
+                        )
+                    }"
+                }.toTypedArray()
+                AlertDialog.Builder(this)
+                    .setTitle("Please select sim card")
+                    .setItems(textList) { _, index ->
+                        val extras = Bundle()
+                        extras.putParcelable(
+                            TelecomManager.EXTRA_PHONE_ACCOUNT_HANDLE,
+                            phoneAccountHandles[index]
+                        )
+                        telecomManager.placeCall(uri, extras)
+                    }
+                    .show()
             } else {
                 //单卡
+                val phoneAccountHandle = phoneAccountHandles[0]
+                val extras = Bundle()
+                extras.putParcelable(TelecomManager.EXTRA_PHONE_ACCOUNT_HANDLE, phoneAccountHandle)
+                telecomManager.placeCall(uri, extras)
             }
-            val phoneAccountHandle = phoneAccountHandles[0]
-            val phoneAccount = telecomManager.getPhoneAccount(phoneAccountHandle)//sim1的卡信息
-            phoneAccount.label//运营商
-            phoneAccount.subscriptionAddress//号码
-            val extras = Bundle()
-            extras.putParcelable(TelecomManager.EXTRA_PHONE_ACCOUNT_HANDLE, phoneAccountHandles[0])
-            telecomManager.placeCall(uri, extras)
         } else {
             //没有sim卡无法拨打
             Toast.makeText(this, "无sim卡", Toast.LENGTH_SHORT).show()

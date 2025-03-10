@@ -1,10 +1,13 @@
 package com.example.defaultphoneapp.calllog
 
 import android.annotation.SuppressLint
+import android.graphics.Color
 import android.provider.CallLog
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
+import com.example.defaultphoneapp.R
 import com.example.defaultphoneapp.databinding.CallLogItemBinding
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -37,9 +40,25 @@ class CallLogAdapter : RecyclerView.Adapter<CallLogAdapter.MyHolder>() {
     override fun onBindViewHolder(holder: MyHolder, position: Int) {
         val item = data?.get(position) ?: return
         holder.binding.tvPhone.text = item.number
-        holder.binding.tvDuration.text = "${getTypeStr(item.type)} ${item.duration} 秒"
         holder.binding.tvTime.text = simpleDateFormat.format(item.dateLong)
-        holder.binding.tvName.text = item.name
+        holder.binding.tvName.text = item.name ?: "未知"
+        when(item.type){
+            CallLog.Calls.MISSED_TYPE -> {
+                holder.binding.tvName.setTextColor(Color.RED)
+                holder.binding.tvPhone.setTextColor(Color.RED)
+                holder.binding.tvDuration.setTextColor(Color.RED)
+                holder.binding.tvDuration.text = "${getTypeStr(item.type)}"
+            }
+            else ->{
+                holder.binding.tvDuration.text = "${getTypeStr(item.type)} ${item.duration} 秒"
+                holder.binding.tvDuration.setTextColor(ContextCompat.getColor(holder.itemView.context,
+                    R.color.black))
+                holder.binding.tvName.setTextColor(ContextCompat.getColor(holder.itemView.context,
+                    R.color.black))
+                holder.binding.tvPhone.setTextColor(ContextCompat.getColor(holder.itemView.context,
+                    R.color.black))
+            }
+        }
     }
 
     private fun getTypeStr(type: Int): String {
