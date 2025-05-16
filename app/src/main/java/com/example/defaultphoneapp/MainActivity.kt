@@ -51,6 +51,7 @@ class MainActivity : AppCompatActivity() {
             } else {
                 binding.btn.text = "不是默认电话应用"
                 binding.btn.setBackgroundColor(Color.RED)
+                requestDefaultCallApp()
             }
         }
 
@@ -118,16 +119,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.btn.setOnClickListener {
-            val intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                val roleManager = getSystemService(ROLE_SERVICE) as RoleManager
-                roleManager.createRequestRoleIntent(RoleManager.ROLE_DIALER)
-            } else {
-                val intent = Intent(TelecomManager.ACTION_CHANGE_DEFAULT_DIALER)
-                intent.putExtra(
-                    TelecomManager.EXTRA_CHANGE_DEFAULT_DIALER_PACKAGE_NAME, packageName
-                )
-            }
-            activityResultLauncher.launch(intent)
+            requestDefaultCallApp()
         }
 
         binding.btnCall.setOnClickListener {
@@ -142,7 +134,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.btnCall2.setOnClickListener {
-            startActivity(Intent(this, MyPhoneCallActivity::class.java))
+            startActivity(Intent(this, SmsActivity::class.java))
         }
     }
 
@@ -150,8 +142,7 @@ class MainActivity : AppCompatActivity() {
         val telecomManager = getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             telecomManager.registerTelephonyCallback(
-                mainExecutor,
-                object : TelephonyCallback(), TelephonyCallback.CallStateListener {
+                mainExecutor, object : TelephonyCallback(), TelephonyCallback.CallStateListener {
                     override fun onCallStateChanged(state: Int) {
                         when (state) {
                             CALL_STATE_IDLE -> {
@@ -172,6 +163,32 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        if (isDefaultPhoneCallApp()) {
+            binding.btn.text = "已经是默认电话应用"
+            binding.btn.setBackgroundColor(Color.GREEN)
+//            startService(Intent(this , MyInCallService::class.java))
+        } else {
+            binding.btn.text = "不是默认电话应用"
+            binding.btn.setBackgroundColor(Color.RED)
+            requestDefaultCallApp()
+        }
+    }
+
+    private fun requestDefaultCallApp() {
+        val intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            val roleManager = getSystemService(ROLE_SERVICE) as RoleManager
+            roleManager.createRequestRoleIntent(RoleManager.ROLE_DIALER)
+        } else {
+            val intent = Intent(TelecomManager.ACTION_CHANGE_DEFAULT_DIALER)
+            intent.putExtra(
+                TelecomManager.EXTRA_CHANGE_DEFAULT_DIALER_PACKAGE_NAME, packageName
+            )
+        }
+        activityResultLauncher.launch(intent)
+    }
+
     /**
      * 拨打电话
      */
@@ -187,22 +204,18 @@ class MainActivity : AppCompatActivity() {
                     val phoneAccount = telecomManager.getPhoneAccount(it)
                     "${phoneAccount.label}:${
                         URLDecoder.decode(
-                            phoneAccount.subscriptionAddress.toString(),
-                            "UTF-8"
+                            phoneAccount.subscriptionAddress.toString(), "UTF-8"
                         )
                     }"
                 }.toTypedArray()
-                AlertDialog.Builder(this)
-                    .setTitle("Please select sim card")
+                AlertDialog.Builder(this).setTitle("Please select sim card")
                     .setItems(textList) { _, index ->
                         val extras = Bundle()
                         extras.putParcelable(
-                            TelecomManager.EXTRA_PHONE_ACCOUNT_HANDLE,
-                            phoneAccountHandles[index]
+                            TelecomManager.EXTRA_PHONE_ACCOUNT_HANDLE, phoneAccountHandles[index]
                         )
                         telecomManager.placeCall(uri, extras)
-                    }
-                    .show()
+                    }.show()
             } else {
                 //单卡
                 val phoneAccountHandle = phoneAccountHandles[0]
